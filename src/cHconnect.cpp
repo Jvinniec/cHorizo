@@ -69,8 +69,12 @@ bool cHconnect::TestConnection()
 bool cHconnect::Connect()
 {
     // Run the connection
-    h_isConnected = connect(h_socket_ref,&h_sockaddr, sizeof(h_serv_addr));
-    if (int(errno) != 0) throw cHexception();
+    if(connect(h_socket_ref, (struct sockaddr *)&h_serv_addr, sizeof(h_serv_addr)) < 0) {
+        h_isConnected = false;
+        throw cHexception();
+    } else {
+        h_isConnected = true;
+    }
     
     return h_isConnected;
 }
