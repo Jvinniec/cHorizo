@@ -26,6 +26,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
 #include<arpa/inet.h>
 
@@ -66,7 +67,7 @@ bool cHconnect::TestConnection()
  * Establishes the connection to the HORIZONS telnet service
  *  @returns Whether or not the connection was successful.
  **************************************************************/
-bool cHconnect::Connect()
+bool cHconnect::Connect(bool printwelcome)
 {
     // Run the connection
     if(connect(h_socket_ref, (struct sockaddr *)&h_serv_addr, sizeof(h_serv_addr)) < 0) {
@@ -74,6 +75,9 @@ bool cHconnect::Connect()
         throw cHexception();
     } else {
         h_isConnected = true;
+        if (printwelcome) {
+            std::cout << Recv() << std::endl;
+        }
     }
     
     return h_isConnected;
@@ -81,25 +85,92 @@ bool cHconnect::Connect()
 
 
 /**************************************************************
- * Establishes the connection to the HORIZONS telnet service
- *  @returns Whether or not the connection was successful.
+ * Disconnects the connection to the HORIZONS telnet service
+ *
+ *  @returns Whether or not the disconnection was successful.
+ *
+ * Method returns 'true' if the disconnection was successful or
+ * if the socket wasnt connected in the first place. If method
+ * fails to disconnect, then method returns 'false' and throws an
+ * exception. This method is called by default in the deconstructor.
  **************************************************************/
 bool cHconnect::Disconnect()
 {
     // Shutdown the connection
     int shutdown_status(-1);
     if (h_isConnected) {
-        shutdown_status = shutdown(h_socket_ref, 2);
+        // Close the connection
+        shutdown_status = close(h_socket_ref);
+    } else {
+        return true;
     }
     
     // Check the status
-    if (shutdown_status >= 0) {
+    if (shutdown_status == 0) {
         h_isConnected = false;
         return true;
     } else {
-        std::cout << strerror(errno) << std::endl;
+        throw cHexception();
         return false;
     }
+}
+
+
+/**************************************************************
+ * Send a message to the server.
+ *
+ *  @param[in] msg          Message to send to the server
+ *  @return True of send was successfull
+ *
+ * This methods sends a message to the server in 'h_url'. If a
+ * reply is expected from the server, you should call 'Recv()'.
+ **************************************************************/
+bool cHconnect::Send(const std::string& msg)
+{
+    // Go ahead and connect
+    return (send(h_socket_ref, msg.c_str(), msg.size(), 0) >= 0);
+    
+}
+
+
+/**************************************************************
+ * Receives a message fom the server.
+ *
+ *  @return Message from the server.
+ *
+ * This methods receives replys from the server.
+ **************************************************************/
+std::string cHconnect::Recv(int msg_size)
+{
+    std::string msgStr;
+    char msg[1];
+    while (recv(h_socket_ref, msg, 1, MSG_WAITALL) > 0) {
+        std::cout << msg;
+        msgStr.push_back(msg[0]);
+    }
+    std::cout << std::endl;
+    return msgStr;
+}
+
+/**************************************************************
+ * Set the url for the server to be connected to
+ *
+ *  @param[in] url      URL to connect to
+ **************************************************************/
+void cHconnect::SetURL(const std::string& url)
+{
+    h_url = url;
+}
+
+
+/**************************************************************
+ * Set the port number to connect through
+ *
+ *  @param[in] portnum      Port number to connect through
+ **************************************************************/
+void cHconnect::SetPort(const int& portnum)
+{
+    h_portnum = portnum;
 }
 
 # pragma mark - Protected Methods

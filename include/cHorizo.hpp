@@ -11,5 +11,6 @@
 
 #include "cHconnect.hpp"
 #include "cHexception.hpp"
+#include "cHquery.hpp"
 
 #endif /* CHORIZO_HPP */

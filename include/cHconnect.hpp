@@ -25,24 +25,23 @@ public:
     /******  METHODS  ******/
     
     // Establish the connection
-    bool Connect();
+    bool Connect(bool printwelcome=false);
     
     // Close the connection
     bool Disconnect();
     
     // Send/receive data to/from the server
-    void Send();
-    void Recv();
+    bool        Send(const std::string& msg);
+    std::string Recv(int msg_size=-1);
     
-    // Get information regarding the connection
-    bool TestConnection();
-    
+    // Get/Set information regarding the connection
+    bool        TestConnection();
+    std::string GetURL() {return h_url;}
+    int         GetPort() {return h_portnum;}
+    void        SetURL(const std::string& url);
+    void        SetPort(const int& port);
     
     /****** VARIABLES ******/
-    
-    int h_portnum = 6775;                  ///< Port to connect to
-    std::string h_url = "horizons.jpl.nasa.gov";
-    //std::string h_url = "128.149.23.134";
     
     
 protected:
@@ -57,6 +56,12 @@ protected:
     bool h_isConnected = false;         ///< True when connected to the service
     int h_socket_ref = -1;              ///< Reference returned by call to 'socket()'
     
+    // Connection details
+    
+    int h_portnum = 6775;                           ///< Port to connect to
+    std::string h_url = "horizons.jpl.nasa.gov";    ///< URL to connect to
+    //std::string h_url = "128.149.23.134";         ///< Alternative URL
+
 private:
     
 };

@@ -11,6 +11,8 @@
 
 #include "cHorizo.hpp"
 
+bool quit(cHconnect& horizons);
+
 int main(int argc, char** argv)
 {
     // Make a connection to the telnet
@@ -19,7 +21,7 @@ int main(int argc, char** argv)
         std::cout.flush();
         cHconnect horizons(false) ;
         
-        horizons.Connect();
+        horizons.Connect(true);
         
         // Print out success or failure
         if (horizons.TestConnection()) {
@@ -32,7 +34,8 @@ int main(int argc, char** argv)
         
         
         // Send the server request
-        
+        // Attempt to quit the server
+        quit(horizons);
         
         // Recieve the results of the request
         
@@ -48,13 +51,34 @@ int main(int argc, char** argv)
         // Check whether the connection is still open or closed
         if (!horizons.TestConnection()) {
             std::cout << " SUCCESS!" << std::endl;
+            
         } else {
             std::cout << " FAILURE!" << std::endl;
         }
         
     } catch (cHexception & e) {
         std::cout << e.what() << std::endl;
+        return 1;
     }
     
     return 0;
+}
+
+
+bool quit(cHconnect& horizons)
+{
+    // Send 'quit' to the server
+    std::cout << "Sending 'quit' to server ... ";
+    std::cout.flush();
+    if (!horizons.Send("?\n")) {
+        std::cout << "FAILURE!" << std::endl;
+        return false;
+    } else {
+        std::cout << "SUCCESS!" << std::endl;
+        std::cout << "Server reply:\n" << std::endl;
+        // Try to catch the reply
+        std::string reply = horizons.Recv();
+        std::cout << reply << std::endl;
+    }
+    return true;
 }
